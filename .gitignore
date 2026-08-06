@@ -1,0 +1,62 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+
+# ---- Secrets / environment ----
+.env
+.env.*
+!.env.example
+
+# ---- Notebooks ----
+.ipynb_checkpoints/
+
+# ---- Data (keep the folder structure, ignore the contents) ----
+**/data/**
+!**/data/**/
+
+# ---- Eval reports (generated output) ----
+**/evals/reports/**
+!**/evals/reports/**/
+*.sqlite3
+
+# ---- Model / index artifacts ----
+models/
+checkpoints/
+vectorstore/
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.faiss
+*.gguf
+
+# ---- Tooling caches ----
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# ---- IDE (IntelliJ / PyCharm) ----
+.idea/
+*.iml
+*.iws
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+logs/
+*.log
+
+# ---- Always keep folder placeholders (must stay last to win) ----
+!**/.gitkeep
