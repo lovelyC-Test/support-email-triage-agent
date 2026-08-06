@@ -1,11 +1,16 @@
 name: CI
 
-# Runs on every push to a branch and on every pull request into main.
+# Runs on pull requests into main, and on pushes to main itself.
+#
+# Pushing to a feature branch does not run CI on its own. Once a pull request is
+# open, every further push to that branch re-runs it, so you still get feedback
+# on each commit without paying for two runs of the same code.
+#
 # Make this check "required" in the repository's branch protection settings and
 # the merge button stays disabled until it is green.
 on:
   push:
-    branches-ignore: []
+    branches: [main]
   pull_request:
     branches: [main]
 
