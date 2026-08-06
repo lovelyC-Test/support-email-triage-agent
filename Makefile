@@ -4,11 +4,16 @@
 # Two kinds of target, and the distinction matters:
 #   fix    changes your files to make them correct
 #   lint   only reports, and changes nothing
-# `make check` uses the reporting kind, so a pass genuinely means it was clean
-# rather than meaning something quietly rewrote it.
+# `make check` uses the reporting kind, so a pass genuinely means the code was
+# clean rather than meaning something quietly rewrote it.
+#
+# PY is the prefix used to find the tools. Locally that is the virtual
+# environment; in CI the tools are already on PATH, so the workflow overrides it
+# with `make check PY=`. That way CI and your machine run identical commands and
+# cannot drift apart.
 
 .DEFAULT_GOAL := help
-PY := .venv/bin
+PY ?= .venv/bin/
 
 .PHONY: help venv install fix lint typecheck test cov check run version clean
 
@@ -20,34 +25,34 @@ venv:  ## Create the virtual environment
 	python3 -m venv .venv
 
 install: venv  ## Install the package, dev tools and git hooks
-	$(PY)/python -m pip install --upgrade pip
-	$(PY)/python -m pip install -e ".[dev]"
-	$(PY)/pre-commit install
+	$(PY)python -m pip install --upgrade pip
+	$(PY)python -m pip install -e ".[dev]"
+	$(PY)pre-commit install
 
 fix:  ## Autofix lint errors and reformat. MODIFIES FILES
-	$(PY)/ruff check . --fix
-	$(PY)/ruff format .
+	$(PY)ruff check . --fix
+	$(PY)ruff format .
 
 lint:  ## Report lint and formatting problems, changing nothing
-	$(PY)/ruff check .
-	$(PY)/ruff format --check .
+	$(PY)ruff check .
+	$(PY)ruff format --check .
 
 typecheck:  ## Strict type check
-	$(PY)/mypy
+	$(PY)mypy
 
 test:  ## Run the tests. These must pass with no network connection
-	$(PY)/pytest
+	$(PY)pytest
 
 cov:  ## Run the tests with a coverage report
-	$(PY)/pytest --cov
+	$(PY)pytest --cov
 
-check: lint typecheck test  ## Verify everything, changing nothing. Run before committing
+check: lint typecheck test  ## Verify everything, changing nothing. Run before pushing
 
 run:  ## Process the sample emails through the graph
-	$(PY)/python -m support_desk.main process-folder data/raw/emails
+	$(PY)python -m support_desk.main process-folder data/raw/emails
 
 version:  ## Phase 1 acceptance test: the package imports and reports its version
-	$(PY)/python -m support_desk.main --version
+	$(PY)python -m support_desk.main --version
 
 clean:  ## Remove caches and build artefacts
 	rm -rf .pytest_cache .ruff_cache .mypy_cache .coverage dist build

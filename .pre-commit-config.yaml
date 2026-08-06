@@ -1,9 +1,13 @@
 # Quality gates that run before a commit is created.
 #
-# Install once with:  pre-commit install
+# Install once with:  pre-commit install     (or: make install)
 # Refresh versions:   pre-commit autoupdate
 # Run over all files: pre-commit run --all-files
-exclude: '^(data/|evals/reports/)'
+#
+# These run locally and can be skipped with `git commit --no-verify`, so they are
+# fast feedback rather than enforcement. The enforcement is the same set of
+# checks running in GitHub Actions, where they cannot be bypassed.
+exclude: '^(data/|artifacts/|docs/)'
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -23,7 +27,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
     hooks:
-      # Lint first (with autofix), then format.
+      # Lint with autofix first, then format.
       - id: ruff
         args: [--fix]
       - id: ruff-format
@@ -32,22 +36,19 @@ repos:
     rev: v1.13.0
     hooks:
       - id: mypy
-        # mypy runs in its own isolated env, so it needs the typed deps too.
+        # mypy runs in its own isolated environment, so it needs the typed
+        # dependencies too. Keep this list in step with pyproject.toml, or the
+        # hook will disagree with `make typecheck`.
         additional_dependencies:
           - pydantic>=2.7
           - pydantic-settings>=2.3
+          - structlog>=24.1
+          - types-PyYAML>=6.0
         args: [--strict, --ignore-missing-imports]
 
   # Catches API keys and tokens before they reach git history, where removing
-  # them is painful and the key must be rotated anyway.
+  # them is not enough: the key was public and must be rotated.
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.21.2
     hooks:
       - id: gitleaks
-
-  # Strips notebook outputs so committed notebooks stay reviewable and never
-  # carry cached results or accidentally-printed credentials.
-  - repo: https://github.com/kynan/nbstripout
-    rev: 0.8.1
-    hooks:
-      - id: nbstripout
