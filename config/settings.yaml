@@ -1,0 +1,60 @@
+# Everything here can be changed without touching a line of Python.
+# Loaded and validated by src/support_desk/config.py.
+# No secrets in this file - it is committed. Keys live in .env.
+
+app:
+  name: support-desk
+  environment: development        # development | production
+
+model:
+  provider: openai                # swap to anthropic or google here alone
+
+  # Both roles start on the cheap model. The handbook suggests a stronger model
+  # for the writer, but on a small prepaid budget it is better to find out
+  # whether composer quality is actually the bottleneck before paying for it.
+  # Upgrading later is one line, which is the point of it living here.
+  planner_model: gpt-4o-mini      # structured decisions: classify, route
+  writer_model: gpt-4o-mini       # the composer. Try gpt-4o only if quality demands it
+
+  planner_temperature: 0.0        # 0 for decisions: we want repeatability
+  writer_temperature: 0.3         # some warmth for prose, but stay close to sources
+  max_output_tokens: 1200
+  request_timeout_seconds: 45
+
+limits:
+  max_tool_calls_per_run: 25      # stops a runaway agent draining the budget
+
+  # One email through the whole graph should cost a fraction of a penny. A
+  # ceiling of 0.05 is generous enough never to trip in normal use and low
+  # enough to catch a genuine runaway before it matters.
+  max_spend_gbp_per_run: 0.05
+
+  max_email_chars: 20000          # reject oversized email before any model call
+
+memory:
+  vector_store_path: data/index
+  collection_name: help_articles
+  embedding_model: text-embedding-3-small
+  top_k: 5                        # how many chunks retrieval returns
+  database_path: data/support.db  # orders, tickets, audit trail
+
+# The confidence gate. Three of its four signals read their threshold from here;
+# the fourth is the blocking-flag list, which lives in code.
+# Each number needs a justification, not just a value - the rubric asks for it.
+gate:
+  # The classifier is instructed to score below 0.6 when an email spans more
+  # than one category, so this threshold catches exactly that case.
+  min_class_confidence: 0.6
+
+  # A starting point only. Calibrate against the labelled set once retrieval is
+  # real. The number to minimise is the false-confident rate: answers sent that
+  # should have been escalated.
+  min_retrieval_score: 0.35
+
+  # One citation is the floor for "grounded". A draft citing nothing is prose,
+  # however fluent it reads.
+  min_citations: 1
+
+logging:
+  level: INFO
+  format: console                 # console while developing, json in production

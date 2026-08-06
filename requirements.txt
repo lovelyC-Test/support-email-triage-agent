@@ -1,0 +1,29 @@
+# The prescribed stack, grouped by the build phase that first needs it.
+#
+# Install the project and its current dependencies with:
+#     pip install -e ".[dev]"
+#
+# Uncomment each block as you reach that phase. Installing everything up front
+# means debugging a dependency you are not using yet.
+
+# ---- Active now: phases 1-2 (scaffold and plumbing) -------------------------
+pydantic>=2.7            # structured output schemas, settings validation
+pydantic-settings>=2.3   # reads secrets from .env, never from YAML
+pyyaml>=6.0              # config/settings.yaml
+structlog>=24.1          # key-value logging, so a run reads back as data
+python-dotenv>=1.0       # loads .env for the API key
+tenacity>=8.3            # retry with backoff in the gateway
+
+# ---- Phase 4: state and the graph ------------------------------------------
+# langgraph>=0.2         # conditional edges are first-class, which is the point
+
+# ---- Phase 5: retrieval ----------------------------------------------------
+# chromadb>=0.5          # persistent local vector store, no server needed
+# langchain-text-splitters>=0.3   # RecursiveCharacterTextSplitter
+
+# ---- Phase 6: real model calls ---------------------------------------------
+# langchain-openai>=0.2  # with_structured_output for guaranteed schemas
+# langchain-core>=0.3
+
+# ---- Phase 10: interface ---------------------------------------------------
+# streamlit>=1.37        # inbox on the left, decision and reasons on the right

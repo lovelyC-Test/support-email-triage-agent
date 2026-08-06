@@ -1,81 +1,126 @@
-# support-email-triage-agent
+# support-desk
 
-Agentic email triage for customer support: classifies incoming messages into
-three intents, answers from the company's own help documents via retrieval,
-and escalates to a human when confidence is low.
+**Project 1 — Customer Support Resolution Desk.** Routing and retrieval with a
+confidence gate controlling the exit.
 
-> Status: scaffolding only. No implementation yet.
+An incoming email is cleaned, classified into one of three categories, routed
+down a matching path, answered from the company's own help documents, and then
+judged: is this answer good enough to send on its own, or does it need a human?
 
-## Why
-
-A small company receives around two hundred customer emails a week. Roughly
-half are the same handful of questions — where is my order, how do I return
-something, why has my subscription renewed. The other half are genuinely varied
-and need a person. Today one member of staff reads all two hundred, which means
-the difficult ones wait behind the easy ones.
-
-Think of a receptionist in a large building. The receptionist does not know how
-to fix a boiler or process a refund. What the receptionist does, extremely
-well, is work out within ten seconds which of three corridors you need, hand
-you the right leaflet if the answer is on a leaflet, and walk you to a human
-when it is not. That is exactly what this system does. Its intelligence is in
-the sorting and in the honesty about its own limits, not in knowing everything.
-
-## Pipeline
-
-1. **Classify** — assign the message to one of three categories. The model's
-   output is a validated category, never free text.
-2. **Route** — each category follows its own path through the graph.
-3. **Retrieve** — search the company's help documents before answering
-   anything, and detect when retrieval was too weak to answer from.
-4. **Gate** — decide whether the answer is good enough to send on its own.
-5. **Hand over** — when it is not, escalate with the full context the human
-   needs, not just the original message.
-
-The confidence gate in step 4 is the heart of the project.
-
-## Layout
-
-```
-src/triage_agent/
-├── api/              HTTP entrypoint (request/response schemas, routes)
-├── agent/
-│   ├── nodes/        one module per graph node (classify, retrieve, answer, gate, handover)
-│   ├── routes/       the conditional edges — which path each category takes
-│   └── prompts/      prompt templates, versioned as files rather than inline strings
-├── retrieval/        document loading, chunking, indexing, search
-├── clients/          LLM / vector store / mail adapters behind interfaces (so tests can mock them)
-├── config/           env-driven settings, thresholds, category definitions
-└── observability/    tracing, token and cost logging, decision audit trail
-
-data/
-├── help_docs/        the source knowledge base (contents gitignored)
-└── samples/          example emails for local runs
-
-evals/
-├── datasets/         labelled test sets — the classifier set and the gate set
-└── reports/          generated confusion matrices and metrics (gitignored)
-
-tests/
-├── unit/             pure logic, LLM calls mocked
-└── integration/      end-to-end graph runs
-
-scripts/              CLI entrypoints (ingest docs, run eval, replay an email)
-docs/                 architecture notes and decision records
-```
-
-## Evaluation
-
-Two things get measured separately:
-
-- **Classifier** — a confusion matrix built from a labelled test set, not an
-  impression of how it feels.
-- **Confidence gate** — the trade-off between sending wrong answers and
-  escalating easy ones. The number that matters most is the false-confident
-  rate: how often it answered when it should have escalated.
+That last decision — the confidence gate — is the heart of the project.
 
 ## Setup
 
+Python 3.12 or newer. No API key needed until phase 6.
+
 ```bash
-cp .env.example .env    # then fill in your keys — .env is gitignored
+make install          # venv, dependencies, pre-commit hooks
+cp .env.example .env  # add OPENAI_API_KEY when you reach phase 6
+make check            # lint, typecheck, tests
+make version          # phase 1 acceptance test
 ```
+
+## Commands
+
+```bash
+make lint         # ruff check --fix, then ruff format
+make typecheck    # mypy, strict
+make test         # pytest
+make check        # all three, as CI would
+make help         # list every target
+```
+
+## Layout
+
+Follows Project 1 §1.7 and the standard skeleton in Part 1 §1.3. Modules for
+later phases exist but are empty, holding a one-line docstring stating their job.
+
+```
+config/settings.yaml          models, limits, memory, gate thresholds
+config/prompts/*.md           one prompt per agent, version controlled
+src/support_desk/
+  main.py                     CLI: process one email or a whole folder
+  config.py                   loads settings.yaml + .env into one object
+  state.py                    SupportState, defined exactly once
+  graph.py                    nodes and edges; no business logic
+  agents/                     intake, classifier, refund, technical, general, composer
+  tools/                      order_lookup, policy_lookup. A tool never calls a model
+  memory/                     vector_store (Chroma), ticket_store (SQLite)
+  models/                     gateway.py (the only LLM caller), schemas.py
+  guardrails/                 gate.py, validators.py, limits.py. Nothing calls a model
+  utils/                      logging.py, tokens.py
+data/raw/help_articles/       30-50 short help articles (phase 3)
+data/raw/emails/              40 sample emails, 20 labelled (phase 3)
+data/index/                   Chroma persistent directory (phase 5)
+artifacts/runs/               one folder per run: state, log, outputs
+scripts/                      build_index, seed_db, run_eval
+tests/unit  tests/integration  tests/fixtures
+app/streamlit_app.py          the demonstration interface (phase 8)
+```
+
+## The seven rules
+
+From Part 1 §1.4. Each exists because breaking it causes a specific problem later.
+
+1. An agent never calls an external service directly — it calls a tool.
+2. A tool never calls a language model. Tools are dumb and deterministic.
+3. Prompts live in files under `config/prompts/`, referenced by name.
+4. The shared state is defined exactly once, in `state.py`, with types.
+5. Every node takes the state and returns a *patch* — never mutates, never
+   returns the whole state.
+6. Configuration is loaded once at start-up into one settings object. No function
+   anywhere else reads an environment variable.
+7. Nothing prints. Everything logs, with the trace identifier attached.
+
+## Current state
+
+Phase 1 complete, phase 2 in progress.
+
+Every function is a signature, a docstring explaining what it must do, and
+`raise NotImplementedError`. Writing the bodies is the exercise. Declarations are
+finished and need no work: `state.py`, `models/schemas.py`, and the settings
+classes in `config.py`.
+
+### Now: phase 2 — plumbing
+
+> Acceptance test: *a test replaces the gateway with the fake and passes offline.*
+
+In dependency order:
+
+1. `resolve_path()` in `config.py`
+2. `get_settings()` in `config.py` — the one with real substance
+3. `configure()`, `get_logger()`, `bind_run()` in `utils/logging.py`
+4. `FakeGateway.__init__` and `.structured()` in `models/gateway.py`
+5. `build_parser()` and `main()` in `main.py`
+
+Leave `ModelGateway` unimplemented for now — it needs an API key and phase 6.
+
+Un-skip the tests in `tests/unit/test_config.py` and `tests/unit/test_gateway.py`
+as each starts passing. They are written as a checklist; each name states what it
+proves.
+
+Done when `make check` is green and `make version` prints `0.1.0`.
+
+## Build sequence
+
+Project 1 §1.10, which refines the eight-phase method in Part 1 §1.11.
+
+1. **Scaffold** — folders, empty modules, README, first commit *(done)*
+2. **Plumbing** — config, logging, gateway, FakeGateway ← *here*
+3. **Data** — 30-50 help articles, 40 emails, 20 hand-labelled
+4. **State and stubs** — every node returns a fixed patch; all three routes run
+5. **Retrieval** — build the index; five hand-written retrieval checks
+6. **Classifier** — real prompt, confusion matrix, above 80% accuracy
+7. **Specialists and composer** — every reply cites a source or declines
+8. **Gate** — four signals, exhaustively tested. The most important file here
+9. **Exits** — send and escalate; the handover packet
+10. **Interface** — Streamlit inbox showing the gate's reasoning
+
+## Notes on cost
+
+Both model roles are set to `gpt-4o-mini` in `config/settings.yaml`. Phases 1-5
+cost nothing, because everything runs against `FakeGateway`. Real spend starts at
+phase 6, at roughly a tenth of a penny per email through the full graph.
+
+While iterating on prompts, evaluate against 5 emails rather than 20 and save the
+full labelled set for the number that goes in this README.

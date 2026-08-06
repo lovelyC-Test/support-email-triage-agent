@@ -18,14 +18,21 @@ env/
 # ---- Notebooks ----
 .ipynb_checkpoints/
 
-# ---- Data (keep the folder structure, ignore the contents) ----
-**/data/**
-!**/data/**/
+# ---- Data ----
+# Part 1 section 1.3 says to exclude data/, but two handbook requirements need
+# parts of it committed:
+#   - phase 3: "the labelled set is committed"
+#   - the help articles are hand-written source material, not generated output
+# So the rule is by origin, not by folder: anything a script rebuilds is ignored,
+# anything a human wrote is committed.
 
-# ---- Eval reports (generated output) ----
-**/evals/reports/**
-!**/evals/reports/**/
-*.sqlite3
+# Generated, rebuilt by scripts/build_index.py and scripts/seed_db.py:
+data/index/
+data/processed/
+data/*.db
+data/*.sqlite3
+
+# Committed on purpose: data/raw/ holds the help articles and labelled emails.
 
 # ---- Model / index artifacts ----
 models/
@@ -60,3 +67,13 @@ logs/
 
 # ---- Always keep folder placeholders (must stay last to win) ----
 !**/.gitkeep
+
+# ---- Run artefacts ----
+# Ignored by default: a run produces noise, and there will be hundreds of them.
+# The definition of done requires three saved runs (one a deliberate failure) to
+# be part of the submission, so force-add exactly those:
+#     git add -f artifacts/runs/<trace-id>
+artifacts/
+
+# ---- Course handbook: large, and not ours to redistribute ----
+docs/*.pdf
