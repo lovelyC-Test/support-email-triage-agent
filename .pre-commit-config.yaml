@@ -32,19 +32,17 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
-    hooks:
-      - id: mypy
-        # mypy runs in its own isolated environment, so it needs the typed
-        # dependencies too. Keep this list in step with pyproject.toml, or the
-        # hook will disagree with `make typecheck`.
-        additional_dependencies:
-          - pydantic>=2.7
-          - pydantic-settings>=2.3
-          - structlog>=24.1
-          - types-PyYAML>=6.0
-        args: [--strict, --ignore-missing-imports]
+  # There is deliberately no mypy hook here.
+  #
+  # pre-commit runs every hook in an isolated environment, so mypy would need its
+  # own copy of each typed dependency. That list drifts out of step with
+  # pyproject.toml, and the hook then disagrees with `make typecheck` - reporting
+  # errors that do not exist locally, or missing ones that do. mypy is also the
+  # only hook that needs project dependencies at all; everything else here runs
+  # standalone.
+  #
+  # Type checking therefore has exactly one definition: `make typecheck`, run
+  # locally and by the CI "check" job.
 
   # Catches API keys and tokens before they reach git history, where removing
   # them is not enough: the key was public and must be rotated.
