@@ -5,14 +5,15 @@ Run it with either of:
     python -m support_desk.main --version
     support-desk --version
 
-Today only ``--version`` needs to work. That is the handbook's phase 1 acceptance
-test, and it proves the package installs and imports cleanly.
+Only ``--version`` works today. The two subcommands are declared so the
+interface is settled, but both need the graph, which does not exist yet.
 """
 
 import argparse
+from pathlib import Path
 
-# Unused until you implement build_parser(); keep the import.
-from . import __version__  # noqa: F401
+from . import __version__
+from .utils.logging import get_logger
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -20,36 +21,45 @@ def build_parser() -> argparse.ArgumentParser:
 
     Kept separate from :func:`main` so a test can inspect the parser without
     running the program.
-
-    What this must do:
-
-    1. Create a parser with a short description.
-    2. Add ``--version``, printing the package version. The simplest route is
-       ``action="version"`` with ``version=__version__``, which makes argparse
-       handle printing and exiting for you.
-    3. Add a subcommand for processing a single email from a file path.
-    4. Add a subcommand for processing every email in a folder.
-
-    Leave the subcommands defined but unimplemented for now; they need the graph,
-    which does not exist yet.
     """
-    raise NotImplementedError
+    parser = argparse.ArgumentParser(
+        prog="support-desk",
+        description="Triage a support email: classify, route, ground, gate, escalate.",
+    )
+    # action="version" makes argparse handle the printing and the exit itself.
+    parser.add_argument("--version", action="version", version=__version__)
+
+    subcommands = parser.add_subparsers(dest="command", metavar="COMMAND")
+
+    process = subcommands.add_parser("process", help="Process a single email file")
+    process.add_argument("path", type=Path, help="Path to the email file")
+
+    process_folder = subcommands.add_parser(
+        "process-folder", help="Process every email in a folder"
+    )
+    process_folder.add_argument("path", type=Path, help="Folder containing email files")
+
+    return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     """Parse arguments, dispatch, and return a process exit code.
 
-    Returning an int rather than calling ``sys.exit`` keeps this testable: a test
-    can assert on the return value instead of catching ``SystemExit``.
-
-    What this must do:
-
-    1. Build the parser and parse ``argv`` (None means read ``sys.argv``).
-    2. Configure logging once, here, before anything else runs.
-    3. Dispatch to the chosen subcommand.
-    4. Return 0 on success and non-zero on failure.
+    Returns an int rather than calling ``sys.exit`` so a test can assert on the
+    return value instead of catching ``SystemExit``.
     """
-    raise NotImplementedError
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    # Logging is configured once, here, before any other code runs.
+    log = get_logger(__name__)
+
+    if args.command is None:
+        parser.print_help()
+        return 1
+
+    log.error("command_not_implemented", command=args.command, path=str(args.path))
+    return 1
 
 
 if __name__ == "__main__":

@@ -1,24 +1,21 @@
 """Loads configuration once, validates it, and exposes a single settings object.
 
 Nothing else in the application reads ``os.environ`` or opens ``settings.yaml``.
-If you find yourself wanting to, add a field here instead. That is rule 6 of the
-seven rules in Part 1 section 1.4.
+When a module needs a new tunable value, add a field here and pass the settings
+object down.
 
-Two files, one job between them: the YAML holds anything a person might want to
-tune, and this module loads it, merges in the secrets from the environment,
+``settings.yaml`` is committed and holds anything a person might want to tune.
+``.env`` is not committed and holds the secrets. This module merges the two,
 validates the result, and hands back one object.
-
-Structure follows Part 1 section 1.6, with an extra ``gate`` section that is
-specific to Project 1.
 """
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
+import yaml
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-# Your implementation of get_settings() will also need:  import yaml
 
 #: Repository root, resolved from this file's location so the CLI, the tests and
 #: the Streamlit app all agree regardless of the directory they were started in.
@@ -50,34 +47,37 @@ class ModelConfig(BaseModel):
 
 
 class LimitsConfig(BaseModel):
-    """The guardrail numbers. Every cap in the system reads its limit from here.
+    """Ceilings that stop one run consuming unbounded time or money.
 
-    Section 1.9 requires an attempt cap, a spend ceiling and input validation.
-    All three read their thresholds from this object.
+    Read by ``guardrails.limits`` and ``guardrails.validators``.
     """
 
     max_tool_calls_per_run: int = Field(default=25, ge=1)
     max_spend_gbp_per_run: float = Field(default=0.40, gt=0)
-    # Project 1: an oversized email must be rejected before any model call.
+    # Checked at intake, so an oversized email costs nothing.
     max_email_chars: int = Field(default=20_000, ge=1)
 
 
 class MemoryConfig(BaseModel):
-    """Where retrieval and persistent storage live."""
+    """Where retrieval and persistent storage live.
+
+    Both paths are relative to the repository root; pass them through
+    :func:`resolve_path` before use.
+    """
 
     vector_store_path: str = "data/index"
     collection_name: str = "help_articles"
     embedding_model: str = "text-embedding-3-small"
     top_k: int = Field(default=5, ge=1)
-    # Project 1: SQLite holds orders, tickets and the audit trail.
+    # SQLite: orders, tickets and the audit trail.
     database_path: str = "data/support.db"
 
 
 class GateConfig(BaseModel):
-    """Thresholds for the confidence gate. Specific to Project 1.
+    """Thresholds for the confidence gate, read by ``guardrails.gate``.
 
-    These are the numbers the marking rubric expects to see justified, so they
-    live together and are documented rather than scattered through the code.
+    Three of the gate's four signals compare against a number here. The fourth
+    is the blocking-flag list, which lives in code.
     """
 
     min_class_confidence: float = Field(
@@ -135,33 +135,54 @@ def resolve_path(value: str | Path) -> Path:
     Absolute paths should pass through unchanged; relative ones get joined onto
     :data:`PROJECT_ROOT`.
     """
-    raise NotImplementedError
+    path = Path(value)
+    return path if path.is_absolute() else PROJECT_ROOT / path
 
 
 @lru_cache
 def get_settings(settings_path: Path | None = None) -> Settings:
     """Load the YAML, merge in secrets, validate, and return the settings object.
 
-    Cached so it is built once and reused everywhere, which is rule 6: config is
-    loaded once at start-up and passed down.
+    Cached, so the file is read once per process. A missing file yields all
+    defaults. A file that exists but is not a mapping raises, because silently
+    falling back to defaults hides a typo'd config for hours.
 
-    What this must do:
+    Tests that need different values should build :class:`Settings` directly, or
+    call ``get_settings.cache_clear()`` first.
 
-    1. Default to ``PROJECT_ROOT / 'config' / 'settings.yaml'`` when no path is
-       given.
-    2. Read it with ``yaml.safe_load``, never ``yaml.load``.
-    3. Treat a missing file as acceptable and return ``Settings()`` — every field
-       has a default, so the system runs out of the box.
-    4. Treat a malformed file as an error and fail loudly. Silently falling back
-       to defaults is what leaves someone wondering for an hour why their new
-       threshold had no effect.
-    5. Build each section from its slice of the YAML, letting pydantic validate.
-       Note the YAML nests the level under ``logging:``, so ``log_level`` has to
-       be pulled out of that sub-mapping rather than read from the top level.
-    6. Construct ``Secrets()`` with no arguments — pydantic-settings reads
-       ``.env`` by itself.
-
-    Because this is cached, tests that need different values should build
-    ``Settings(...)`` directly, or call ``get_settings.cache_clear()`` first.
+    Raises:
+        TypeError: the file exists but does not contain a mapping.
+        pydantic.ValidationError: a value is present but out of range.
     """
-    raise NotImplementedError
+    path = settings_path or PROJECT_ROOT / "config" / "settings.yaml"
+
+    raw: dict[str, Any] = {}
+    if path.is_file():
+        with path.open(encoding="utf-8") as handle:
+            loaded = yaml.safe_load(handle)
+        # An empty file is equivalent to no file.
+        if loaded is not None:
+            if not isinstance(loaded, dict):
+                raise TypeError(f"{path} must contain a YAML mapping, got {type(loaded).__name__}")
+            raw = loaded
+
+    def section(name: str) -> dict[str, Any]:
+        value = raw.get(name) or {}
+        if not isinstance(value, dict):
+            raise TypeError(f"{path}: '{name}' must be a mapping, got {type(value).__name__}")
+        return value
+
+    # The YAML nests these under `logging:`; Settings keeps them flat.
+    logging_section = section("logging")
+
+    return Settings(
+        app=AppConfig(**section("app")),
+        model=ModelConfig(**section("model")),
+        limits=LimitsConfig(**section("limits")),
+        memory=MemoryConfig(**section("memory")),
+        gate=GateConfig(**section("gate")),
+        log_level=logging_section.get("level", "INFO"),
+        log_format=logging_section.get("format", "console"),
+        # Sourced from .env and the environment, never from the YAML.
+        secrets=Secrets(),
+    )
