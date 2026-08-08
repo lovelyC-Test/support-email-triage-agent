@@ -88,6 +88,10 @@ docstring-code-format = true
 [tool.mypy]
 python_version = "3.12"
 files = ["src", "tests"]
+# Resolve `support_desk` from the working tree rather than site-packages.
+# Without this, an editable install can make mypy read the installed copy and
+# treat the package as untyped, which fails only in CI.
+mypy_path = "src"
 strict = true
 warn_unreachable = true
 show_error_codes = true
