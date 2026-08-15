@@ -1,0 +1,10 @@
+From: grace.lindqvist@example.com
+Subject: Please cancel order 10333
+
+Hello,
+
+I placed order 10333 about twenty minutes ago for a K7 Pro and I have just
+realised I ordered the wrong colour. Please cancel it and I will order again.
+
+Thank you,
+Grace

@@ -1,0 +1,9 @@
+From: hugh.fairbairn@example.com
+Subject: wrong address on my order
+
+Hello,
+
+I have just ordered a blender and put my old address in by mistake. The order
+still says processing. Can you change it, or should I cancel and start again?
+
+Hugh

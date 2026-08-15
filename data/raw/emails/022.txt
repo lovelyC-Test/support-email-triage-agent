@@ -1,0 +1,9 @@
+From: ade.olawale@example.com
+Subject: blender completely dead
+
+Hi,
+
+My B1 will not start at all. No noise, no lights, nothing. I was making soup and
+had been running it for a while before it stopped. The socket works.
+
+Ade

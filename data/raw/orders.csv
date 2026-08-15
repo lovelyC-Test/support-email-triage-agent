@@ -1,0 +1,13 @@
+order_id,customer_email,product,quantity,status,order_date,delivery_date
+10234,alice.turner@example.com,K7 kettle,1,delivered,2026-08-03,2026-08-05
+10241,daniel.hughes@example.com,T5 toaster,1,delivered,2026-08-04,2026-08-07
+10256,priya.nair@example.com,K7 Pro kettle,1,delivered,2026-08-06,2026-08-10
+10263,marcus.bell@example.com,G2 coffee grinder,1,delivered,2026-07-28,2026-07-31
+10270,sofia.rossi@example.com,B1 blender,1,delivered,2026-07-20,2026-07-23
+10288,james.okafor@example.com,T3 toaster,1,delivered,2026-06-29,2026-07-02
+10295,helen.varga@example.com,Water filter cartridges,3,delivered,2026-08-08,2026-08-11
+10302,tom.whitfield@example.com,K7 kettle,1,dispatched,2026-08-12,
+10318,ruth.mensah@example.com,Descaler sachets,1,delivered,2026-08-01,2026-08-04
+10325,liam.doherty@example.com,B1 blender,1,delivered,2026-06-15,2026-06-18
+10333,grace.lindqvist@example.com,K7 Pro kettle,1,processing,2026-08-13,
+10347,omar.haddad@example.com,T5 toaster,1,delivered,2026-05-02,2026-05-06
