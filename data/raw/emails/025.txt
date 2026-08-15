@@ -1,0 +1,12 @@
+From: bob.carrington@example.com
+Subject: Does the K7 work with a caravan solar inverter?
+
+Hello,
+
+I am thinking of buying the K7 but I want to run it from a 300W pure sine wave
+inverter in my campervan, off a leisure battery and solar setup. Will it work, or
+does it need more than that? I do not want to buy it and find out it trips the
+inverter.
+
+Cheers,
+Bob

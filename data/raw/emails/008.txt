@@ -1,0 +1,14 @@
+From: tom.whitfield@example.com
+Subject: cancel my order please
+
+Hi,
+
+Order 10302. I need to cancel this — I found the same kettle cheaper elsewhere.
+The site says it has been dispatched already. Can you stop it?
+
+Tom Whitfield
+
+________________________________
+This email and any attachments are confidential and intended solely for the
+addressee. If you have received this in error please notify the sender and
+delete it from your system.
