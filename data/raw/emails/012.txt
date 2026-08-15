@@ -1,0 +1,14 @@
+From: yasmin.qureshi@example.com
+Subject: Wrong item sent
+
+Hi,
+
+I ordered a T3 toaster and a T5 arrived instead. I do not want the T5. Do I send
+it back and get a refund, or can you swap it for the one I actually ordered?
+Either is fine, whichever is quicker.
+
+Thanks,
+Yasmin
+
+--
+Sent from Mail for Windows

@@ -1,0 +1,21 @@
+filename,category,note
+001.txt,refund,damaged on arrival with a valid order id
+002.txt,refund,order id is not in the orders table
+003.txt,refund,change of mind well outside the 30-day window
+004.txt,refund,change of mind inside the window
+005.txt,refund,mix of opened and sealed non-returnable items
+006.txt,refund,unopened consumable inside the window
+007.txt,refund,cancellation while still processing
+013.txt,technical,switch fault on a K7 Pro
+014.txt,technical,early cut-out consistent with limescale
+015.txt,technical,possible leak or condensation
+017.txt,technical,uneven browning on a T5
+018.txt,technical,carriage jammed on a T3
+020.txt,technical,grinder seized on oily beans
+022.txt,technical,blender dead after prolonged running
+026.txt,general,delivery times and cost
+028.txt,general,what the warranty covers
+030.txt,general,subscription frequency and price
+031.txt,general,cancelling a subscription
+032.txt,general,declined card and pending charge
+035.txt,general,product registration and serial number
