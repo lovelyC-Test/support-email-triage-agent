@@ -10,8 +10,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 
-# Only what the current phase needs. LangGraph, ChromaDB, LangChain and Streamlit
-# arrive in later phases; requirements.txt lists the full stack with its phases.
+# Only what the current phase needs. ChromaDB, LangChain and Streamlit arrive in
+# later phases; requirements.txt lists the full stack with its phases.
 dependencies = [
     "pydantic>=2.7",
     "pydantic-settings>=2.3",
@@ -19,6 +19,7 @@ dependencies = [
     "structlog>=24.1",
     "python-dotenv>=1.0",
     "tenacity>=8.3",
+    "langgraph>=0.2",
 ]
 
 # Linters and formatters are pinned exactly. An unpinned linter means CI installs

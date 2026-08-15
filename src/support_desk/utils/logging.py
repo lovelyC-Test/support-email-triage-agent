@@ -35,10 +35,13 @@ def configure() -> None:
     # structlog renders the whole line, so stdlib must not add a prefix of its own.
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level)
 
+    # Colour only when a human is watching. Redirected to a file the escape
+    # codes land in the middle of every key and value, which makes a saved run
+    # impossible to grep and defeats the point of keeping it.
     renderer: structlog.typing.Processor = (
         structlog.processors.JSONRenderer()
         if settings.log_format == "json"
-        else structlog.dev.ConsoleRenderer()
+        else structlog.dev.ConsoleRenderer(colors=sys.stdout.isatty())
     )
 
     structlog.configure(

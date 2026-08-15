@@ -8,7 +8,8 @@ six months that comment is the documentation.
 than a whole state.
 """
 
-from typing import Literal, TypedDict
+import operator
+from typing import Annotated, Literal, TypedDict
 
 Category = Literal["refund", "technical", "general"]
 Decision = Literal["auto_reply", "human_queue"]
@@ -33,7 +34,11 @@ class SupportState(TypedDict, total=False):
 
     # ---- set by whichever specialist agent ran ----------------------
     findings: str  # written: specialist. read: composer
-    flags: list[str]  # written: any node. read: gate. e.g. 'order_not_found'
+
+    # Several nodes add flags, so this one merges rather than replaces. Without
+    # the reducer the last writer wins and an earlier flag is silently dropped
+    # before the gate ever sees it. A node returning {"flags": [...]} appends.
+    flags: Annotated[list[str], operator.add]  # written: any node. read: gate
 
     # ---- set by retrieval and the composer --------------------------
     retrieved_chunks: list[dict[str, object]]  # written: retriever. read: composer, gate
