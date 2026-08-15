@@ -1,0 +1,10 @@
+From: nathan.price@example.com
+Subject: Refund request order 99871
+
+Hi there,
+
+I want to return the toaster I bought, order 99871. It is not what I expected.
+Please send me a returns label.
+
+Regards,
+Nathan Price

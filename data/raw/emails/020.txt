@@ -1,0 +1,9 @@
+From: marcus.bell@example.com
+Subject: G2 has seized up
+
+Hi,
+
+The grinder from order 10263 has stopped turning. The motor makes a noise but
+nothing comes out. I have been using quite oily dark roast beans on setting 2.
+
+Marcus Bell
